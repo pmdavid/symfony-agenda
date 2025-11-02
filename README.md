@@ -4,30 +4,98 @@
 
 ## Despliegue en local
 
-En progreso…
+### 1. Clonar el repositorio
+
+```bash
+  git clone git@github.com:pmdavid/symfony-agenda.git
+```
+
+### 2. Levantar docker containers
+
+```bash
+  docker-compose up -d --build
+```
+
+
+### 3. Instalar dependencias
+Desde el contenedor PHP:
+```bash
+  composer install
+```
+
+### 4. Ejecutar migration
+
+Desde el contenedor PHP:
+```bash
+  php bin/console doctrine:migrations:migrate
+```
+
+## Ejecutar tests
+
+Desde el contenedor PHP:
+```bash
+   vendor/bin/phpunit tests/Unit
+```
 
 ---
 
-## Endpoints y flujo de lógica
+## API y flujo de la aplicación
 
 ### - POST | `/api/reserve`
-Reservar un slot.
+Reservar un slot para la hora, fecha y área común indicados. Estructura JSON de la request:
+
+```json
+{
+  "commonArea": 1,
+  "date": "2025-11-02",
+  "hour": 10
+}
+```
+
+La respuesta devuelve un JSON con el resultado de la petición:
+
+```json
+{
+  "success": true
+}
+```
 
 **Flujo de la solicitud:**
 Request → ReservationController (Infra) → ReservationUseCase (Application) → ReservationService (Domain)
 
 ### - GET | `/api/availability`
-Obtener los huecos de horas con su estado (`LIBRE` / `RESERVADO`) para una fecha determinada.
+Obtener los huecos de horas con su estado (`LIBRE` / `RESERVADO`) para una fecha determinada. Estructura JSON de la response:
+
+```json
+{
+  "slots": [
+    {"hour": 9, "status": "LIBRE"},
+    {"hour": 10, "status": "RESERVADO"},
+    ...
+  ]
+}
+```
+
+
 
 **Flujo de la solicitud:**
 Request → AvailabilityController (Infra) → GetAvailabilityUseCase (Application) → ReservationService (Domain)
 
 
 
-## Notas / Mejoras posibles
+## Notas / Refactorings posibles
+
+- Se ha implementado una arquitectura hexagonal para separar claramente las responsabilidades y facilitar el mantenimiento y escalabilidad del código:
+
+1. **Capa de Dominio:** Contiene la lógica de negocio principal, incluyendo entidades y servicios. Podemos ver como en el Service estamos usando una Interface del repositorio, lo que permite desacoplar la lógica de negocio del acceso a datos. La implementacion cooncreta se encuentra en Infraestructura e implementa dicha interface.
+2. **Capa de Aplicación:** Contiene los casos de uso que orquestan la lógica de negocio.
+3. **Capa de Infraestructura:** Maneja la interacción con el mundo exterior, en este caso: controladores y acceso a database.
+
+
+
 
 - **Tests para casos de uso:**  
-  No se han añadido porque los UseCases actuales son muy simples y delegan la lógica al dominio. En contextos más complejos, sería útil testear que los UseCases llaman correctamente a los servicios de dominio. Se mockearia el servicio de dominio y se verificaría que se llama con los parámetros correctos.
+  No se han añadido por tiempo y porque los UseCases actuales son muy simples y delegan la lógica al dominio. En contextos más complejos, sería útil testear que los UseCases llaman correctamente a los servicios de dominio. Se mockearia el servicio de dominio y se verificaría que se llama con los parámetros correctos.
 
 
 - **Estado de reserva (`RESERVED` / `FREE`):**  
@@ -40,7 +108,7 @@ Request → AvailabilityController (Infra) → GetAvailabilityUseCase (Applicati
 
 - **DTOs para Requests y Responses:**  
   En proyectos más complejos es buena práctica usar DTOs para transformar o validar la estructura de datos entre cliente y aplicación.  
-  Ejemplo: `CreateReservationRequest`. Este DTO debería vivir en la capa de Application, aunque según el contexto podría ir en Infraestructura.
+  Ejemplo DTO: CreateReservationRequest, y de paso,dentro del propio DTO podemos validar los campos de la request mediante asserts. Este DTO iria en la capa de application aunque segun matices podría ir en infraestructura.
 
 
 - **División de servicios:**  
@@ -56,7 +124,13 @@ Request → AvailabilityController (Infra) → GetAvailabilityUseCase (Applicati
 
 
 - **Logging:**  
-  Para auditar solicitudes o depurar, se puede inyectar por ejemplom en el UseCase, un logger y registrar los intentos de reserva.
+  Para auditar solicitudes o depurar, se podría inyectar por ejemplom en el UseCase, un logger y registrar los intentos de reserva.
+
+
+- **Manejo de errores:**
+
+  Actualmente, si una reserva no puede ser realizada, se devuelve un JSON con success: false. En un sistema más robusto, se podrían lanzar excepciones específicas y manejarlas con try-catch en el controlador para devolver códigos HTTP adecuados.
+
 
 ---
 
@@ -65,5 +139,5 @@ Request → AvailabilityController (Infra) → GetAvailabilityUseCase (Applicati
 - Autenticación y roles de usuario.
 - Gestión de `CommonAreas` desde un panel de administrador, incluyendo la posibilidad de anular reservas de cualquier usuario.
 - Cancelación de reservas por el propio usuario.
-- Limitar reservas por usuario y penalizar usuarios que cancelan excesivamente, usando historial de reservas.
-
+- Establecer un limite por defecto de reservas por usuario. Penalizar usuarios que cancelan reservas excesivamente, usando el historial de reservas que estan guardadas en database status "reserved"
+- Notificaciones por email al usuario al realizar o cancelar una reserva.
