@@ -11,14 +11,14 @@ export interface Slot {
 }
 
 
-// Trae los slots de un CommonArea y fecha
+// Llamar a nuestro GET /availability para obtener todos los slots por fecha y área común
 export async function fetchAvailability(commonAreaId: number, date: string): Promise<Slot[]> {
     const res = await fetch(`${API_URL}/availability?commonArea=${commonAreaId}&date=${date}`);
     const data = await res.json();
     return data.slots; // Asegúrate de que el backend devuelve { slots: [...] }
 }
 
-// Reservar un slot
+// Llamar a nuestro POST /reserve para reservar un slot especifico
 export async function bookSlot(commonAreaId: number, date: string, hour: number): Promise<boolean> {
     const res = await fetch(`${API_URL}/reserve`, {
         method: "POST",
