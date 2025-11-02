@@ -102,6 +102,10 @@ Request → AvailabilityController (Infra) → GetAvailabilityUseCase (Applicati
   Para la logica actual no sería necesario. pero he considerado el status libre/reservado en como campo/propiedad de Reservation, pensando que a futuro podria ser útil tener guardadas las reservas que se han liberado (cancelado), a modo de historico. De esa foma, por ejemplo, el admin podría saber que vecinos cancelan muchas reservas.
 
 
+- **Common Areas:**
+  Las Common areas (Pista de padel, Piscina...) se han hardcodeado en front para ahorrar tiempo, pero normalmente lo ideal sería obtenerlas desde API con una llamada especifica para ello (o donde encaje segun el contexto).
+
+
 - **Uso de Entities y Repositories:**  
   En sistemas simples se podría usar directamente la Entity con el ORM. En este proyecto, para mantener arquitectura hexagonal, se ha creado un `ReservationEntity` en Infraestructura que maneja el acceso a datos real.
 
@@ -141,4 +145,5 @@ Request → AvailabilityController (Infra) → GetAvailabilityUseCase (Applicati
 - Cancelación de reservas por el propio usuario.
 - Establecer un limite por defecto de reservas por usuario. Penalizar usuarios que cancelan reservas excesivamente, usando el historial de reservas que estan guardadas en database status "reserved"
 - Notificaciones por email al usuario al realizar o cancelar una reserva.
+
 
