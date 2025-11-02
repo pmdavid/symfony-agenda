@@ -1,6 +1,6 @@
 
 
-# Sistema de Reservas de Common Areas
+# Sistema de reserva de horarios para áreas comunes.
 
 ## Despliegue en local
 
@@ -141,3 +141,4 @@ Request → AvailabilityController (Infra) → GetAvailabilityUseCase (Applicati
 - Cancelación de reservas por el propio usuario.
 - Establecer un limite por defecto de reservas por usuario. Penalizar usuarios que cancelan reservas excesivamente, usando el historial de reservas que estan guardadas en database status "reserved"
 - Notificaciones por email al usuario al realizar o cancelar una reserva.
+
