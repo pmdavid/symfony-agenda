@@ -99,7 +99,7 @@ Request → AvailabilityController (Infra) → GetAvailabilityUseCase (Applicati
 
 
 - **Estado de reserva (`RESERVED` / `FREE`):**  
-  Para la logica actual no sería necesario. pero he considerado el status libre/reservado en como campo/propiedad de Reservation, pensando que a futuro podria ser útil tener guardadas las reservas que se han liberado (cancelado), a modo de historico. De esa foma, por ejemplo, el admin podría saber que vecinos cancelan muchas reservas.
+  Para la logica actual no era necesario. pero al final lo he "sobrecomplicado" añadiendo el status libre/reservado en como campo/propiedad de Reservation, pensando que a futuro podria ser útil tener guardadas las reservas que se han liberado (cancelado), a modo de historico. De esa foma, por ejemplo, el admin podría saber que vecinos cancelan muchas reservas. Lo mas simple para la escala del problema habria sido simplemente guardar reservas e interpretar guardadas como slot reservado y el resto como libres.
 
 
 - **Common Areas:**
@@ -120,7 +120,7 @@ Request → AvailabilityController (Infra) → GetAvailabilityUseCase (Applicati
 
 
 - **Métodos del Repository:**  
-  Actualmente se usa un único método para consultar reservas. Se podrían crear métodos separados (`findOne` y `findAll`) para mayor claridad y rendimiento.
+  Actualmente se usa un único método para consultar reservas. Se podrían crear métodos separados (`findOne` y `findAll`) para mayor claridad y rendimiento. Esto es algo basico pero lo deje para el final y se me iba de tiempo.
 
 
 - **ENUM para status:**  
@@ -128,13 +128,15 @@ Request → AvailabilityController (Infra) → GetAvailabilityUseCase (Applicati
 
 
 - **Logging:**  
-  Para auditar solicitudes o depurar, se podría inyectar por ejemplom en el UseCase, un logger y registrar los intentos de reserva.
+  Para auditar solicitudes o depurar, se podría inyectar por ejemplom en el UseCase un logger que registre los intentos de reserva con info de la request.
 
 
 - **Manejo de errores:**
 
   Actualmente, si una reserva no puede ser realizada, se devuelve un JSON con success: false. En un sistema más robusto, se podrían lanzar excepciones específicas y manejarlas con try-catch en el controlador para devolver códigos HTTP adecuados.
 
+- **Comentarios de funciones**
+  Se podrían detallar mucho mejor algunas funciones dando contexto de lo que hacen si fuera necesario, y añadiendo sus types de params de entrada y del return. 
 
 ---
 
@@ -145,5 +147,6 @@ Request → AvailabilityController (Infra) → GetAvailabilityUseCase (Applicati
 - Cancelación de reservas por el propio usuario.
 - Establecer un limite por defecto de reservas por usuario. Penalizar usuarios que cancelan reservas excesivamente, usando el historial de reservas que estan guardadas en database status "reserved"
 - Notificaciones por email al usuario al realizar o cancelar una reserva.
+
 
 
