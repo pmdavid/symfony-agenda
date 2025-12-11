@@ -1,48 +1,45 @@
+# Schedule reservation system for common areas.
 
+## Local deployment
 
-# Sistema de reserva de horarios para áreas comunes.
-
-## Despliegue en local
-
-### 1. Clonar el repositorio
+### 1. Clone the repository
 
 ```bash
   git clone git@github.com:pmdavid/symfony-agenda.git
 ```
 
-### 2. Levantar docker containers
+### 2. Start docker containers
 
 ```bash
   docker-compose up -d --build
 ```
 
-
-### 3. Instalar dependencias
-Desde el contenedor PHP:
+### 3. Install dependencies
+From the PHP container:
 ```bash
   composer install
 ```
 
-### 4. Ejecutar migration
+### 4. Run migration
 
-Desde el contenedor PHP:
+From the PHP container:
 ```bash
   php bin/console doctrine:migrations:migrate
 ```
 
-## Ejecutar tests
+## Run tests
 
-Desde el contenedor PHP:
+From the PHP container:
 ```bash
    vendor/bin/phpunit tests/Unit
 ```
 
 ---
 
-## API y flujo de la aplicación
+## API and application flow
 
 ### - POST | `/api/reserve`
-Reservar un slot para la hora, fecha y área común indicados. Estructura JSON de la request:
+Reserve a slot for the indicated hour, date, and common area. JSON structure of the request:
 
 ```json
 {
@@ -52,7 +49,7 @@ Reservar un slot para la hora, fecha y área común indicados. Estructura JSON d
 }
 ```
 
-La respuesta devuelve un JSON con el resultado de la petición:
+The response returns a JSON with the result of the request:
 
 ```json
 {
@@ -60,93 +57,61 @@ La respuesta devuelve un JSON con el resultado de la petición:
 }
 ```
 
-**Flujo de la solicitud:**
+**Request flow:**
 Request → ReservationController (Infra) → ReservationUseCase (Application) → ReservationService (Domain)
 
 ### - GET | `/api/availability`
-Obtener los huecos de horas con su estado (`LIBRE` / `RESERVADO`) para una fecha determinada. Estructura JSON de la response:
+Get the hour slots with their status (`FREE` / `RESERVED`) for a given date. JSON structure of the response:
 
 ```json
 {
   "slots": [
-    {"hour": 9, "status": "LIBRE"},
-    {"hour": 10, "status": "RESERVADO"},
+    {"hour": 9, "status": "FREE"},
+    {"hour": 10, "status": "RESERVED"},
     ...
   ]
 }
 ```
 
-
-
-**Flujo de la solicitud:**
+**Request flow:**
 Request → AvailabilityController (Infra) → GetAvailabilityUseCase (Application) → ReservationService (Domain)
 
+## Notes / Possible Refactorings
 
+- A hexagonal architecture has been implemented to clearly separate responsibilities and facilitate code maintenance and scalability:
 
-## Notas / Refactorings posibles
+1. **Domain Layer:** Contains the main business logic, including entities and services. We can see how in the Service we are using a repository Interface, which allows decoupling business logic from data access. The concrete implementation is found in Infrastructure and implements that interface.
+2. **Application Layer:** Contains the use cases that orchestrate the business logic.
+3. **Infrastructure Layer:** Handles interaction with the outside world, in this case: controllers and database access.
 
-- Se ha implementado una arquitectura hexagonal para separar claramente las responsabilidades y facilitar el mantenimiento y escalabilidad del código:
-
-1. **Capa de Dominio:** Contiene la lógica de negocio principal, incluyendo entidades y servicios. Podemos ver como en el Service estamos usando una Interface del repositorio, lo que permite desacoplar la lógica de negocio del acceso a datos. La implementacion cooncreta se encuentra en Infraestructura e implementa dicha interface.
-2. **Capa de Aplicación:** Contiene los casos de uso que orquestan la lógica de negocio.
-3. **Capa de Infraestructura:** Maneja la interacción con el mundo exterior, en este caso: controladores y acceso a database.
-
-
-
-
-- **Tests para casos de uso:**  
-  No se han añadido por tiempo y porque los UseCases actuales son muy simples y delegan la lógica al dominio. En contextos más complejos, sería útil testear que los UseCases llaman correctamente a los servicios de dominio. Se mockearia el servicio de dominio y se verificaría que se llama con los parámetros correctos.
-
-
-- **Estado de reserva (`RESERVED` / `FREE`):**  
-  Para la logica actual no era necesario. pero al final lo he "sobrecomplicado" añadiendo el status libre/reservado en como campo/propiedad de Reservation, pensando que a futuro podria ser útil tener guardadas las reservas que se han liberado (cancelado), a modo de historico. De esa foma, por ejemplo, el admin podría saber que vecinos cancelan muchas reservas. Lo mas simple para la escala del problema habria sido simplemente guardar reservas e interpretar guardadas como slot reservado y el resto como libres.
-
+- **Tests for use cases:**
+They have not been added because the current UseCases are very simple and delegate the logic to the domain. In more complex contexts, it would be useful to test that the UseCases correctly call the domain services. The domain service would be mocked and it would be verified that it is called with the correct parameters.
 
 - **Common Areas:**
-  Las Common areas (Pista de padel, Piscina...) se han hardcodeado en front para ahorrar tiempo, pero normalmente lo ideal sería obtenerlas desde API con una llamada especifica para ello (o donde encaje segun el contexto).
+The common areas (Paddle court, Pool...) have been hardcoded in the front end, but normally the ideal would be to obtain them from the API with a specific call for that (or wherever it fits according to the context).
 
+- **Use of Entities and Repositories:**
+In simple systems, the Entity could be used directly with the ORM. In this project, to maintain a hexagonal architecture, a `ReservationEntity` has been created in Infrastructure that handles the actual data access.
 
-- **Uso de Entities y Repositories:**  
-  En sistemas simples se podría usar directamente la Entity con el ORM. En este proyecto, para mantener arquitectura hexagonal, se ha creado un `ReservationEntity` en Infraestructura que maneja el acceso a datos real.
+- **DTOs for Requests and Responses:**
+In more complex projects, it is good practice to use DTOs to transform or validate the data structure between client and application.
+DTO example: CreateReservationRequest, and at the same time, within the DTO itself, we can validate the request fields using asserts. This DTO would go in the application layer, although depending on nuances it could go in infrastructure.
 
+- **Division of services:**
+`getAvailability()` could be extracted to an `AvailabilityService`, clearly separating responsibilities within the domain.
 
-- **DTOs para Requests y Responses:**  
-  En proyectos más complejos es buena práctica usar DTOs para transformar o validar la estructura de datos entre cliente y aplicación.  
-  Ejemplo DTO: CreateReservationRequest, y de paso,dentro del propio DTO podemos validar los campos de la request mediante asserts. Este DTO iria en la capa de application aunque segun matices podría ir en infraestructura.
+- **Repository Methods:**
+Currently, a single method is used to query reservations. Separate methods (`findOne` and `findAll`) could be created for greater clarity and performance.
 
-
-- **División de servicios:**  
-  Se podría extraer `getAvailability()` a un `AvailabilityService`, separando claramente responsabilidades dentro del dominio.
-
-
-- **Métodos del Repository:**  
-  Actualmente se usa un único método para consultar reservas. Se podrían crear métodos separados (`findOne` y `findAll`) para mayor claridad y rendimiento. Esto es algo basico pero lo deje para el final y se me iba de tiempo.
-
-
-- **ENUM para status:**  
-  Se ha creado un ENUM `ReservationStatus` para el estado de las reservas. En lógicas más complejas se podría considerar un Value Object, pero un ENUM es más simple y suficiente.
-
+- **ENUM for status:**  
+  An ENUM `ReservationStatus` has been created for the status of reservations. In more complex logic, a Value Object could be considered, but an ENUM is simpler and sufficient.
 
 - **Logging:**  
-  Para auditar solicitudes o depurar, se podría inyectar por ejemplom en el UseCase un logger que registre los intentos de reserva con info de la request.
+  To audit requests or debug, a logger could be injected, for example in the UseCase, to record reservation attempts with request info.
 
+- **Error handling:**  
+  Currently, if a reservation cannot be made, a JSON with success: false is returned. In a more robust system, specific exceptions could be thrown and handled with try-catch in the controller to return appropriate HTTP codes.
 
-- **Manejo de errores:**
-
-  Actualmente, si una reserva no puede ser realizada, se devuelve un JSON con success: false. En un sistema más robusto, se podrían lanzar excepciones específicas y manejarlas con try-catch en el controlador para devolver códigos HTTP adecuados.
-
-- **Comentarios de funciones**
-  Se podrían detallar mucho mejor algunas funciones dando contexto de lo que hacen si fuera necesario, y añadiendo sus types de params de entrada y del return. 
-
----
-
-## Posibles funcionalidades a añadir
-
-- Autenticación y roles de usuario.
-- Gestión de `CommonAreas` desde un panel de administrador, incluyendo la posibilidad de anular reservas de cualquier usuario.
-- Cancelación de reservas por el propio usuario.
-- Establecer un limite por defecto de reservas por usuario. Penalizar usuarios que cancelan reservas excesivamente, usando el historial de reservas que estan guardadas en database status "reserved"
-- Notificaciones por email al usuario al realizar o cancelar una reserva.
-
-
+- **Function comments:**  
+  Some functions could be detailed much better by providing context about what they do if necessary, and adding their input parameter types and return types.
 
