@@ -1,4 +1,6 @@
-# Schedule reservation system for common areas.
+#  Reservation system/agenda for common areas
+
+This repository is about a reservation system for common areas in a homeowners' community. It consists of an **API built with Symfony following a Hexagonal Architecture and a basic frontend created with Vue.js**. Further down in this README, you will find notes on the technical implementation.
 
 ## Local deployment
 
@@ -114,4 +116,5 @@ Currently, a single method is used to query reservations. Separate methods (`fin
 
 - **Function comments:**  
   Some functions could be detailed much better by providing context about what they do if necessary, and adding their input parameter types and return types.
+
 
