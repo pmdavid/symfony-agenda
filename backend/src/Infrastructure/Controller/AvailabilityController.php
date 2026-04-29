@@ -1,6 +1,5 @@
 <?php
 
-// src/Controller/AvailabilityController.php
 
 namespace App\Infrastructure\Controller;
 

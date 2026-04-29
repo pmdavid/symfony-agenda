@@ -25,9 +25,6 @@ class ReservationEntity
     #[ORM\Column(type: "string", length: 10)]
     private string $status;
 
-    // ----------------------
-    // Getters & Setters
-    // ----------------------
 
     public function getId(): ?int
     {

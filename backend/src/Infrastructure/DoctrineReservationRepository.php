@@ -12,9 +12,6 @@ class DoctrineReservationRepository implements ReservationRepositoryInterface
 {
     public function __construct(private EntityManagerInterface $em) {}
 
-    /**
-     * Devuelve todas las reservas de un CommonArea en un día determinado
-     */
     public function findByCommonAreaAndDate(CommonArea $commonArea, \DateTimeImmutable $date, ?int $hour = null): array
     {
         $qb = $this->em->createQueryBuilder();
@@ -40,9 +37,6 @@ class DoctrineReservationRepository implements ReservationRepositoryInterface
         ), $entities);
     }
 
-    /**
-     * Guarda una reserva
-     */
     public function save(Reservation $reservation): void
     {
         $entity = new ReservationEntity();

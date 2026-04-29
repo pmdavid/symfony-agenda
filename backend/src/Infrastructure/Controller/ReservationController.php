@@ -24,7 +24,6 @@ class ReservationController extends AbstractController
             $date = new \DateTimeImmutable($data['date']);
             $hour = (int)$data['hour'];
 
-            // Llamamos al UseCase
             $success = $this->reservationUseCase->execute($commonArea, $date, $hour);
 
             return $this->json(['success' => $success]);
@@ -32,6 +31,6 @@ class ReservationController extends AbstractController
         catch (\JsonException $e) {
             throw new BadRequestHttpException('Invalid JSON body');
         }
-        // Aqui puededn ir otros catchs para manejar excepciones custom si es necesario. Ejemplo: ReservationAlreadyExistsException
+        // Here I could catch other exceptions related to validation or business logic and return appropriate error responses
     }
 }

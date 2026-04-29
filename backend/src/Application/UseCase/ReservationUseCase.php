@@ -10,6 +10,7 @@ class ReservationUseCase
 
     public function execute(CommonArea $commonArea, \DateTimeImmutable $date, int $hour): bool
     {
+
         return $this->reservationService->book($commonArea, $date, $hour);
     }
 }

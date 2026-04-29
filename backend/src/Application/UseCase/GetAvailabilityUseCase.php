@@ -12,8 +12,6 @@ class GetAvailabilityUseCase
     }
 
     /**
-     * Devuelve la disponibilidad general de los slots para CommonArea en un día
-     *
      * @param CommonArea $commonArea
      * @param \DateTimeImmutable $date
      * @return array
